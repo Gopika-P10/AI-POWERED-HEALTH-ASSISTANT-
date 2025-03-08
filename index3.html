@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Assistant Chatbot</title>
+    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+</head>
+<body>
+    <h2>Welcome to Health Assistant Chatbot</h2>
+
+    <!-- Azure Health Bot Iframe -->
+    <iframe id="chatbotFrame" 
+        src="https://webchat.botframework.com/embed/healthagentservice123-lk2gs46?s=1WO3f00Y52pxssVEBuUeOKoATNJjVOfIAICnPogqYMHZtYC2qLtnJQQJ99BBACYeBjFAArohAAABAZBS27a5.94xc0mPsIPZf62vtGInXo0dthQ6H7khbmkysWvQ4admTY1fu2JGCJQQJ99BBACYeBjFAArohAAABAZBS2pUq" 
+        width="400" height="500">
+    </iframe>
+
+    <br>
+
+    <!-- Speech & Chat Controls -->
+    <button onclick="startListening()">  Speak</button>
+    <input type="text" id="textInput" placeholder="Type a message">
+    <button onclick="sendTextMessage()"> Send</button>
+    <button onclick="speakResponse()"> Hear Response</button>
+
+    <p><strong>You said:</strong> <span id="userSpeech"></span></p>
+    <p><strong>Chatbot Response:</strong> <span id="botResponse"></span></p>
+
+    <script>
+        var SpeechSDK;
+        
+        // Azure Speech Service Keys (Replace with your own)
+        const SPEECH_KEY ="A72lnb1h5F1eek4IGkNJS0nJvgYOdvwosL1dN1oMO3yNj5Ze7zHDJQQJ99BCACYeBjFXJ3w3AAAYACOG1mDi";
+        const SERVICE_REGION ="eastus";
+
+        // Function to start listening (Speech-to-Text)
+        function startListening() {
+            let speechConfig = SpeechSDK.SpeechConfig.fromSubscription("A72lnb1h5F1eek4IGkNJS0nJvgYOdvwosL1dN1oMO3yNj5Ze7zHDJQQJ99BCACYeBjFXJ3w3AAAYACOG1mDi","eastus");
+            let audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+            let recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+            recognizer.recognizeOnceAsync(result => {
+                if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+                    let speechText = result.text;
+                    document.getElementById("userSpeech").innerText = speechText;
+                    sendToBot(speechText);  // Send the speech text to the chatbot automatically
+                } else {
+                    document.getElementById("userSpeech").innerText = "Sorry, could not recognize.";
+                }
+            });
+        }
+
+        // Function to send text message (both typed & speech)
+        function sendToBot(userMessage) {
+            document.getElementById("textInput").value = userMessage;  // Autofill input box
+            sendTextMessage();  // Send the message to the chatbot
+        }
+
+        // Function to send text input to chatbot
+        function sendTextMessage() {
+            let textInput = document.getElementById("textInput").value;
+            if (textInput.trim() === "") return;  // Ignore empty messages
+            
+            // Sending the message to chatbot via iframe (Bot Framework)
+            let chatbotFrame = document.getElementById("chatbotFrame");
+            chatbotFrame.contentWindow.postMessage({ text: textInput }, "*");
+
+            // Simulating chatbot response (Replace with actual chatbot integration)
+            let botReply = "You asked: " + textInput + ". Chatbot Response Here!";
+            document.getElementById("botResponse").innerText = botReply;
+
+            // Speak the response automatically
+            speakResponse();
+        }
+
+        // Function to speak chatbot response
+        function speakResponse() {
+            let speechConfig = SpeechSDK.SpeechConfig.fromSubscription("A72lnb1h5F1eek4IGkNJS0nJvgYOdvwosL1dN1oMO3yNj5Ze7zHDJQQJ99BCACYeBjFXJ3w3AAAYACOG1mDi","eastus");
+            let audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+            let synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
+            
+            let textToSpeak = document.getElementById("botResponse").innerText;
+            if (textToSpeak) {
+                synthesizer.speakTextAsync(textToSpeak);
+            }
+        }
+    </script>
+</body>
+</html>
